@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.logisima</groupId>
+    <artifactId>caps-imdb</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <!-- Encoding -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Project settings -->
+        <project.build.encoding>UTF-8</project.build.encoding>
+        <project.java.version>1.8</project.java.version>
+        <project.scala.binary.version>2.11</project.scala.binary.version>
+        <project.scala.version>${project.scala.binary.version}.12</project.scala.version>
+        <project.rootdir>${project.basedir}</project.rootdir>
+
+        <!-- Used plugins -->
+        <plugin.exec-maven.version>1.4.0</plugin.exec-maven.version>
+        <plugin.maven-compiler.version>3.5.1</plugin.maven-compiler.version>
+        <plugin.maven-jar.version>3.0.2</plugin.maven-jar.version>
+        <plugin.maven-resources.version>2.7</plugin.maven-resources.version>
+        <plugin.maven-scala.version>3.2.1</plugin.maven-scala.version>
+        <plugin.maven-scalastyle.version>0.8.0</plugin.maven-scalastyle.version>
+        <plugin.maven-scalatest.version>2.0.0</plugin.maven-scalatest.version>
+
+        <!-- Used dependencies -->
+        <dep.neo4j.version>3.4.7</dep.neo4j.version>
+        <dep.spark-cypher.version>0.2.0</dep.spark-cypher.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.opencypher</groupId>
+            <artifactId>spark-cypher</artifactId>
+            <version>${dep.spark-cypher.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-dbms</artifactId>
+            <version>${dep.neo4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-command-line</artifactId>
+            <version>${dep.neo4j.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- scalac settings -->
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>${plugin.maven-scala.version}</version>
+                <configuration>
+                    <recompileMode>incremental</recompileMode>
+                    <scalaVersion>${project.scala.version}</scalaVersion>
+                    <scalaCompatVersion>${project.scala.binary.version}</scalaCompatVersion>
+                    <encoding>${project.build.encoding}</encoding>
+                    <args combine.children="append">
+                        <!-- need to pass encoding to scalac manually -->
+                        <arg>-encoding</arg>
+                        <arg>${project.build.encoding}</arg>
+                        <arg>-target:jvm-${project.java.version}</arg>
+                        <arg>-unchecked</arg>
+                        <arg>-deprecation</arg>
+                        <arg>-feature</arg>
+                        <arg>-Xfatal-warnings</arg>
+                        <arg>-Xfuture</arg>
+                        <!--<arg>-Ytyper-debug</arg>-->
+                        <arg>-Ywarn-adapted-args</arg>
+                        <arg>-Yopt-warnings:at-inline-failed</arg>
+                        <arg>-Yopt:l:project</arg>
+                        <arg>-Ypartial-unification</arg>
+                    </args>
+                    <jvmArgs>
+                        <!-- Workaround for Scala compiler error: https://github.com/freechipsproject/firrtl/issues/66 -->
+                        <jvmArg>-Xss512m</jvmArg>
+                    </jvmArgs>
+                </configuration>
+
+                <!-- This is needed to mix scala and java code in the same module -->
+                <executions>
+                    <execution>
+                        <id>scala-compile</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                            <goal>doc-jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- scalastyle) -->
+            <plugin>
+                <groupId>org.scalastyle</groupId>
+                <artifactId>scalastyle-maven-plugin</artifactId>
+                <version>${plugin.maven-scalastyle.version}</version>
+                <configuration>
+                    <verbose>false</verbose>
+                    <failOnViolation>true</failOnViolation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <failOnWarning>false</failOnWarning>
+                    <inputEncoding>${project.build.encoding}</inputEncoding>
+                    <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
+                    <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
+                    <configLocation>${project.rootdir}/etc/scalastyle_config.xml</configLocation>
+                    <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
+                    <outputEncoding>${project.build.encoding}</outputEncoding>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
